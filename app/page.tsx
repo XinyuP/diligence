@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { FileDown, Play, Square } from "lucide-react";
+import Link from "next/link";
+import { FileDown, Gauge, Play, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -227,12 +228,20 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-            <span>you.com</span>
-            <span className="text-border">·</span>
-            <span>Baseten</span>
-            <span className="text-border">·</span>
-            <span>Veris AI</span>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/eval"
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+            >
+              <Gauge className="h-3.5 w-3.5" /> Eval harness
+            </Link>
+            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+              <span>you.com</span>
+              <span className="text-border">·</span>
+              <span>Baseten</span>
+              <span className="text-border">·</span>
+              <span>Veris AI</span>
+            </div>
           </div>
         </div>
       </header>
