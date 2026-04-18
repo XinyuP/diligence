@@ -32,6 +32,22 @@ export type EvalReport = {
   judgedAt: string;
 };
 
+export type ConsistencyFinding = {
+  claim1: string;
+  claim2: string;
+  note?: string;
+};
+
+export type CachedEvalReport = {
+  company: string;
+  groundedness?: number;
+  consistencyScore: number; // 0-100
+  contradictions: ConsistencyFinding[];
+  verdict: "pass" | "warn" | "fail";
+  summary: string;
+  judgedAt: string;
+};
+
 const JudgeSchema = z.object({
   coverage: z.array(
     z.object({
@@ -146,6 +162,62 @@ ${flattenMemo(memo)}`;
     groundedness,
     coverage,
     hallucinations: object.hallucinations,
+    verdict: failed ? "fail" : warned ? "warn" : "pass",
+    summary: object.summary,
+    judgedAt: new Date().toISOString(),
+  };
+}
+
+const CachedJudgeSchema = z.object({
+  contradictions: z.array(
+    z.object({
+      claim1: z.string().min(5).max(400),
+      claim2: z.string().min(5).max(400),
+      note: z.string().max(280).optional(),
+    }),
+  ),
+  summary: z.string().min(20).max(400),
+});
+
+const CACHED_SYSTEM = `You are an evaluator checking a diligence memo for internal consistency.
+
+No curated ground truth is provided. Your job is narrow: scan the memo and flag any pair of statements that directly contradict each other (e.g., different founding years for the same company, conflicting funding totals, stating a company is both public and private, contradictory revenue or headcount numbers).
+
+Be strict about actual contradictions — do not flag statements that are merely imprecise or complementary. Quote each conflicting claim verbatim from the memo.`;
+
+export async function judgeCachedMemo(opts: {
+  memo: Memo;
+}): Promise<CachedEvalReport> {
+  const { memo } = opts;
+
+  const prompt = `Company: ${memo.company}
+
+Memo:
+${flattenMemo(memo)}`;
+
+  const { object } = await generateObject({
+    model: basetenModel(),
+    schema: CachedJudgeSchema,
+    system: CACHED_SYSTEM,
+    prompt,
+    temperature: 0.1,
+  });
+
+  const contradictions = object.contradictions;
+  const consistencyScore = Math.max(0, 100 - contradictions.length * 25);
+  const groundedness = memo.verifier?.score;
+
+  const failed =
+    contradictions.length > 0 ||
+    (groundedness !== undefined && groundedness < 60);
+  const warned =
+    !failed && groundedness !== undefined && groundedness < 80;
+
+  return {
+    company: memo.company,
+    groundedness,
+    consistencyScore,
+    contradictions,
     verdict: failed ? "fail" : warned ? "warn" : "pass",
     summary: object.summary,
     judgedAt: new Date().toISOString(),
