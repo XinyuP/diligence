@@ -1,0 +1,5 @@
+profiles:
+  default:
+    targets:
+      diligence-agent:
+        environment_id: env_6pztx67d3tffexe43c4zu
