@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+PITCH_DECK_BRIEF.md
+2026-04-18-full-session.txt
+2026-04-18-153918-this-session-is-being-continued-from-a-previous-c.txt
+DECISIONS.md
