@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { FileDown, Gauge, Play, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,15 @@ export default function Home() {
   const [useCache, setUseCache] = useState(false);
   const [running, setRunning] = useState(false);
   const [abort, setAbort] = useState<AbortController | null>(null);
+
+  useEffect(() => {
+    fetch("/api/config")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.demoMode) setUseCache(true);
+      })
+      .catch(() => {});
+  }, []);
 
   const [phase, setPhase] = useState<string>("idle");
   const [phaseMessage, setPhaseMessage] = useState("");
